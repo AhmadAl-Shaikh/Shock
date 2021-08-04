@@ -11,19 +11,19 @@ import NIOHTTP1
 
 /// SwiftNIO implementation of mock HTTP server
 class MockNIOHttpServer: MockNIOBaseServer, MockHttpServer {
-    
+
     private let responseFactory: ResponseFactory
     private var httpHandler: MockNIOHTTPHandler?
     private var router = MockNIOHTTPRouter()
     private var middleware = [Middleware]()
     private var routeMiddleware: MockRoutesMiddleware?
     var notFoundHandler: HandlerClosure?
-    
+
     init(responseFactory: ResponseFactory) {
         self.responseFactory = responseFactory
         super.init()
     }
-    
+
     func start(_ port: Int, forceIPv4: Bool, priority: DispatchQoS.QoSClass) throws -> Void {
         try start(port) { (channel) -> EventLoopFuture<Void> in
             channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).flatMap {
@@ -35,18 +35,18 @@ class MockNIOHttpServer: MockNIOBaseServer, MockHttpServer {
             }
         }
     }
-    
+
     func register(route: MockHTTPRoute, handler: HandlerClosure?) {
         if let urlPath = route.urlPath, urlPath.isEmpty {
             return
         }
         self.router.register(route: route, handler: handler)
     }
-    
+
     func add(middleware: Middleware) {
         self.middleware.append(middleware)
     }
-    
+
     func has<T>(middlewareOfType type: T.Type) -> Bool where T: Middleware {
         return (self.middleware ?? []).contains { $0 is T }
     }
@@ -68,13 +68,13 @@ struct RouteHandlerMapping {
     let handler: HandlerClosure
 }
 
-struct MockNIOHTTPRouter: MockHttpRouter {
+class MockNIOHTTPRouter: MockHttpRouter {
     private var routes = [MockHTTPMethod: [RouteHandlerMapping]]()
-    
+
     var requiresRouteMiddleware: Bool {
         !routes.isEmpty
     }
-    
+
     func handlerForMethod(_ method: String, path: String, params: [String:String], headers: [String:String]) -> HandlerClosure? {
         guard let httpMethod = MockHTTPMethod(rawValue: method.uppercased()) else { return nil }
         let methodRoutes = routes[httpMethod] ?? [RouteHandlerMapping]()
@@ -85,8 +85,8 @@ struct MockNIOHTTPRouter: MockHttpRouter {
         }
         return nil
     }
-    
-    mutating func register(route: MockHTTPRoute, handler: HandlerClosure?) {
+
+    func register(route: MockHTTPRoute, handler: HandlerClosure?) {
         guard let method = route.method else { return }
         var methodRoutes = routes[method] ?? [RouteHandlerMapping]()
         if methodRoutes.contains() { $0.route == route } {
