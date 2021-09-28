@@ -110,7 +110,7 @@ Run `netstat -anptcp | grep LISTEN` to check which ports are in use.")
         }
 
         
-        guard let method = route.method, let path = route.urlPath else {
+        guard let _ = route.method, let _ = route.urlPath else {
             self.loggingClosure?("ERROR: route was missing a field")
             return
         }
@@ -130,7 +130,7 @@ Run `netstat -anptcp | grep LISTEN` to check which ports are in use.")
             }
             
             response.statusCode = route.statusCode ?? 0
-            route.responseHeaders?.map { response.headers[$0.key] = $0.value }
+            route.responseHeaders?.forEach { response.headers[$0.key] = $0.value }
             
             var data: Data?
             
@@ -140,9 +140,10 @@ Run `netstat -anptcp | grep LISTEN` to check which ports are in use.")
                 } else {
                     data = self.responseFactory.response(fromFileNamed: filename)
                 }
+                response.responseBody = data
+            } else if case let .string(_ ,_ , _, responseString) = route {
+                response.responseBody = responseString.data(using: .utf8)
             }
-            
-            response.responseBody = data
         }
         
     }
